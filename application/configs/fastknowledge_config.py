@@ -17,20 +17,14 @@ SCORE_THRESHOLD = 1.0
 
 
 # fast-search服务接口地址
-SEARCH_SERVER_URL = "http://121.4.255.171:7862"
+SEARCH_SERVER_URL = "http://127.0.0.1:7862"
 
 
 LLM_MODELS_CONFIG = {
     "openai-api": {
         "model_name": "gpt-4",  # 由接口传入，不会使用这个
-        "api_base_url": "http://10.12.25.5:20000/v1",
+        "api_base_url": "https://api.openai.com/v1",
         "api_key": "EMPTY",
-    },
-    "cyou-api": {
-        "clientId": "a01a4923df7a43b39a4923df7a33b34c",
-        "privateKey": "3cJB7EJH",
-        "server_address": "http://10.1.9.87:8100",
-        "api_url": "/cyouNeiOpenAi/api/chatGpt",
     },
 }
 
