@@ -22,6 +22,12 @@ LLM_MODELS_CONFIG = {
         "api_base_url": "https://api.openai.com/v1",
         "api_key": "EMPTY",
     },
+    "cyou-api": {
+        "clientId": "a01a4923df7a43b39a4923df7a33b34c",
+        "privateKey": "3cJB7EJH",
+        "server_address": "http://10.1.9.87:8100",
+        "api_url": "/cyouNeiOpenAi/api/chatGpt",
+    },
 }
 
 # prompt模板使用Jinja2语法，简单点就是用双大括号代替f-string的单大括号
