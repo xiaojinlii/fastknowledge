@@ -10,6 +10,7 @@ from starlette.responses import JSONResponse
 from application.settings import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE, LLM_MODELS, SEARCH_SERVER_URL, \
     MAX_TOKENS
 from core.logger import logger
+from utils.response import ErrorResponse
 from .history import History
 from .utils import search_docs, get_prompt_template, get_ChatOpenAI
 
@@ -47,42 +48,40 @@ async def knowledge_base_chat(
             description="使用的prompt模板名称(在configs/prompt_config.py中配置)"
         ),
 ):
-    time1 = time.time()
-    docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
-    time2 = time.time()
-    context = "\n".join([doc.page_content for doc in docs])
+    try:
+        docs = await search_docs(query, knowledge_base_name, top_k, score_threshold)
+        context = "\n".join([doc.page_content for doc in docs])
 
-    if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
-        prompt_template = get_prompt_template("knowledge_base_chat", "empty")
-    else:
-        prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
+        if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
+            prompt_template = get_prompt_template("knowledge_base_chat", "empty")
+        else:
+            prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
 
-    history = [History.from_data(h) for h in history]
-    input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-    chat_prompt = ChatPromptTemplate.from_messages(
-        [i.to_msg_template() for i in history] + [input_msg])
+        history = [History.from_data(h) for h in history]
+        input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+        chat_prompt = ChatPromptTemplate.from_messages(
+            [i.to_msg_template() for i in history] + [input_msg])
 
-    time3 = time.time()
-    model = get_ChatOpenAI(
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=max_tokens
-    )
-    time4 = time.time()
-    chain = LLMChain(prompt=chat_prompt, llm=model)
-    answer = await chain.ainvoke({"context": context, "question": query})
-    time5 = time.time()
-    logger.info(f"---> search:{time2-time1}, getai:{time4-time3}, ai:{time5-time4}")
+        model = get_ChatOpenAI(
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+        chain = LLMChain(prompt=chat_prompt, llm=model)
+        answer = await chain.ainvoke({"context": context, "question": query})
 
-    source_documents = []
-    for inum, doc in enumerate(docs):
-        filename = doc.metadata.get("source")
-        parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name": filename})
-        url = f"{SEARCH_SERVER_URL}/knowledge_base/download_doc?" + parameters
-        text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
-        source_documents.append(text)
+        source_documents = []
+        for inum, doc in enumerate(docs):
+            filename = doc.metadata.get("source")
+            parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name": filename})
+            url = f"{SEARCH_SERVER_URL}/knowledge_base/download_doc?" + parameters
+            text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+            source_documents.append(text)
 
-    if len(source_documents) == 0:  # 没有找到相关文档
-        source_documents.append(f"<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>")
+        if len(source_documents) == 0:  # 没有找到相关文档
+            source_documents.append(f"<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>")
 
-    return JSONResponse({"answer": answer["text"], "docs": source_documents})
+        return JSONResponse({"code": 200, "answer": answer["text"], "docs": source_documents})
+
+    except Exception as e:
+        return ErrorResponse(f"查询知识库失败：{e}")
