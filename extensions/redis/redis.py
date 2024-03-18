@@ -13,11 +13,13 @@ pip install redis==5.0.1
 from fastapi import FastAPI, Request
 from redis.asyncio import Redis
 
+from application.configs import REDISVALUE, AIHOST, MAX_RPS_VALUE
 from application.settings import REDIS_DB_URL, REDIS_DB_ENABLE
 from redis import asyncio as aioredis
 from redis.exceptions import AuthenticationError, TimeoutError, RedisError
 
 from core.exception import CustomException
+from core.logger import logger
 
 
 async def connect_redis(app: FastAPI, status: bool):
@@ -52,6 +54,10 @@ async def connect_redis(app: FastAPI, status: bool):
     """
     if status:
         rd = aioredis.from_url(REDIS_DB_URL, decode_responses=True, health_check_interval=1)
+        await rd.hset(REDISVALUE, AIHOST, MAX_RPS_VALUE)
+        result = await rd.hgetall(REDISVALUE)
+        logger.info(f"redis:{result}")
+
         app.state.redis = rd
         try:
             response = await rd.ping()

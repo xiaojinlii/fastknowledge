@@ -1,4 +1,3 @@
-
 LLM_MODELS = ["cyou-api"]
 
 HISTORY_LEN = 3
@@ -14,10 +13,8 @@ VECTOR_SEARCH_TOP_K = 3
 # 但有用户报告遇到过匹配分值超过1的情况，为了兼容性默认设为1，在WEBUI中调整范围为0-2
 SCORE_THRESHOLD = 1.0
 
-
 # fast-search服务接口地址
 SEARCH_SERVER_URL = "http://121.4.255.171:7862"
-
 
 LLM_MODELS_CONFIG = {
     "openai-api": {
@@ -32,7 +29,6 @@ LLM_MODELS_CONFIG = {
         "api_url": "/cyouNeiOpenAi/api/chatGpt",
     },
 }
-
 
 # prompt模板使用Jinja2语法，简单点就是用双大括号代替f-string的单大括号
 # 本配置文件支持热加载，修改prompt模板后无需重启服务。
@@ -89,3 +85,16 @@ PROMPT_TEMPLATES = {
             '<问题>{{ question }}</问题>\n',
     },
 }
+
+"""
+redis 配置
+"""
+REDIS_DB_ENABLE = True
+# 格式："redis://:密码@地址:端口/数据库名称"
+REDIS_DB_URL = "redis://:123456@172.17.59.40:57999/0"
+# 和游戏服通讯用的字段
+REDISVALUE = "serverliststatus"
+# 本机ip
+AIHOST = "172.17.59.7:7861"
+# 本机的最大并发
+MAX_RPS_VALUE = 32
