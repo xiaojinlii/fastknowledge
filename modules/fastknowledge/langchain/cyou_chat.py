@@ -22,6 +22,7 @@ from langchain_core.messages import (
     ChatMessageChunk,
     HumanMessage,
     HumanMessageChunk,
+    SystemMessage
 )
 
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
@@ -40,6 +41,8 @@ def _convert_message_to_dict(message: BaseMessage) -> dict:
         message_dict = {"role": "user", "content": message.content}
     elif isinstance(message, AIMessage):
         message_dict = {"role": "assistant", "content": message.content}
+    elif isinstance(message, SystemMessage):
+        message_dict = {"role": "system", "content": message.content}
     else:
         raise TypeError(f"Got unknown type {message}")
 
