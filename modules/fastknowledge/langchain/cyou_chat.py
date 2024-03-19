@@ -94,7 +94,8 @@ class ChatCyou(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         url, params, body = self._handle_request_params(messages)
-        logger.info(f"request:{body}")
+        logger.info(f"request params:{params}")
+        logger.info(f"request body:{body}")
         start_time = time.time()
         response = requests.post(
             url=url,
@@ -118,7 +119,8 @@ class ChatCyou(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         url, params, body = self._handle_request_params(messages)
-        logger.info(f"request:{body}")
+        logger.info(f"request params:{params}")
+        logger.info(f"request body:{body}")
         start_time = time.time()
         async with aiohttp.ClientSession() as session:
             async with session.post(url, params=params, json=body) as response:
