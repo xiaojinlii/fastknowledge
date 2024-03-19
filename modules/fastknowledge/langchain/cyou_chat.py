@@ -1,14 +1,17 @@
+import asyncio
 import hashlib
 import json
 import random
 import time
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Type
 
+import aiohttp
 import requests
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from langchain_core.pydantic_v1 import Field, SecretStr, root_validator
-from langchain_core.callbacks import CallbackManagerForLLMRun
+from langchain_core.callbacks import CallbackManagerForLLMRun, AsyncCallbackManagerForLLMRun
+from core.logger import logger
 
 from langchain_core.messages import (
     AIMessage,
@@ -60,20 +63,7 @@ class ChatCyou(BaseChatModel):
     temperature: float = 1
     request_timeout: int = 60
 
-    def _generate(
-        self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
-        run_manager: Optional[CallbackManagerForLLMRun] = None,
-        **kwargs: Any,
-    ) -> ChatResult:
-        res = self._chat(messages, **kwargs)
-        if res.status_code != 200:
-            raise ValueError(f"Error from Baichuan api response: {res}")
-        response = res.json()
-        return self._create_chat_result(response)
-
-    def _chat(self, messages: List[BaseMessage], **kwargs: Any) -> requests.Response:
+    def _handle_request_params(self, messages: List[BaseMessage]):
         payload = {
             "bodyArray": [_convert_message_to_dict(m) for m in messages],
             "temperature": self.temperature,
@@ -81,7 +71,9 @@ class ChatCyou(BaseChatModel):
 
         json_data = json.dumps(payload)
         timestamp = int(time.time() * 1000)
-        signature = calculate_md5(self.cyou_client_id + self.cyou_private_key + self.cyou_api_url + str(timestamp) + json_data)
+        signature = calculate_md5(
+            self.cyou_client_id + self.cyou_private_key + self.cyou_api_url + str(timestamp) + json_data
+        )
 
         params = {
             'clientId': self.cyou_client_id,
@@ -92,13 +84,51 @@ class ChatCyou(BaseChatModel):
         }
 
         url = self.cyou_api_base + self.cyou_api_url
-        res = requests.post(
+        return url, params, payload
+
+    def _generate(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> ChatResult:
+        url, params, body = self._handle_request_params(messages)
+        logger.info(f"request:{body}")
+        start_time = time.time()
+        response = requests.post(
             url=url,
             timeout=self.request_timeout,
             params=params,
-            json=payload
+            json=body
         )
-        return res
+        if response.status_code != 200:
+            raise ValueError(f"Error from Cyou api response: {response.text}")
+        ret = response.json()
+        end_time = time.time()
+        logger.info(f"response:{ret}, time:{end_time-start_time}")
+        return self._create_chat_result(ret)
+
+    async def _agenerate(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[AsyncCallbackManagerForLLMRun] = None,
+        stream: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> ChatResult:
+        url, params, body = self._handle_request_params(messages)
+        logger.info(f"request:{body}")
+        start_time = time.time()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, params=params, json=body) as response:
+                if response.status != 200:
+                    raise ValueError(f"Error from Cyou api response: {await response.text()}")
+                ret = await response.json()
+                end_time = time.time()
+                logger.info(f"response:{ret}, time:{end_time-start_time}")
+
+        return self._create_chat_result(ret)
 
     def _create_chat_result(self, response: Mapping[str, Any]) -> ChatResult:
         generations = []
@@ -128,7 +158,7 @@ class ChatCyou(BaseChatModel):
         return "cyou-chat"
 
 
-if __name__ == "__main__":
+async def main():
     configs = LLM_MODELS_CONFIG.get("cyou-api")
     chat = ChatCyou(
         cyou_api_base=configs["server_address"],
@@ -137,4 +167,8 @@ if __name__ == "__main__":
         cyou_private_key=configs["privateKey"],
     )
     res = chat.invoke("你是谁")
-    print(res)
+    res = await chat.ainvoke("你是谁")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
