@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from starlette.responses import JSONResponse
 
 from application.settings import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE, LLM_MODELS, SEARCH_SERVER_URL, \
-    MAX_TOKENS
+    MAX_TOKENS, DEFAULT_ANSWER
 from core.logger import logger
 from utils.response import ErrorResponse
 from .history import History
@@ -52,6 +52,9 @@ class KnowledgeBaseChatRequest(BaseModel):
 async def knowledge_base_chat(request_data: KnowledgeBaseChatRequest):
     try:
         docs = await search_docs(request_data.query, request_data.knowledge_base_name, request_data.top_k, request_data.score_threshold)
+        if len(docs) == 0:
+            return JSONResponse({"code": 200, "answer": DEFAULT_ANSWER, "docs": []})
+
         context = "\n".join([doc.page_content for doc in docs])
 
         if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
