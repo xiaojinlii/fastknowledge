@@ -51,7 +51,11 @@ class KnowledgeBaseChatRequest(BaseModel):
 @router.post("/knowledge_base_chat", summary="与知识库对话")
 async def knowledge_base_chat(request_data: KnowledgeBaseChatRequest):
     try:
+        start_time = time.time()
         docs = await search_docs(request_data.query, request_data.knowledge_base_name, request_data.top_k, request_data.score_threshold)
+        end_time = time.time()
+        logger.debug(f"search_docs:{docs}, time:{end_time-start_time}")
+
         if len(docs) == 0:
             return JSONResponse({"code": 200, "answer": DEFAULT_ANSWER, "docs": []})
 
@@ -67,6 +71,7 @@ async def knowledge_base_chat(request_data: KnowledgeBaseChatRequest):
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
 
+        start_time = time.time()
         model = get_ChatOpenAI(
             model_name=request_data.model_name,
             temperature=request_data.temperature,
@@ -74,6 +79,8 @@ async def knowledge_base_chat(request_data: KnowledgeBaseChatRequest):
         )
         chain = LLMChain(prompt=chat_prompt, llm=model)
         answer = await chain.ainvoke({"context": context, "question": request_data.query})
+        end_time = time.time()
+        logger.debug(f"llm response:{answer['text']}, time:{end_time-start_time}")
 
         source_documents = []
         for inum, doc in enumerate(docs):
