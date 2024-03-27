@@ -7,8 +7,8 @@ from pydantic import BaseModel, Field
 from starlette.responses import JSONResponse
 
 from application.settings import TEMPERATURE, LLM_MODELS, MAX_TOKENS
-from core.logger import logger
-from utils.response import ErrorResponse
+from xiaoapi.core import logger
+from xiaoapi.response import ErrorResponse
 from .history import History
 from .utils import get_prompt_template, get_ChatOpenAI
 

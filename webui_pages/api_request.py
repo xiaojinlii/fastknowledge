@@ -9,9 +9,12 @@ import contextlib
 import json
 
 
-from application.configs import HOST, PORT
+from application.settings import HOST, PORT
 from application.settings import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, LLM_MODELS, TEMPERATURE, MAX_TOKENS
-from core.logger import logger
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 HTTPX_DEFAULT_TIMEOUT = 300.0

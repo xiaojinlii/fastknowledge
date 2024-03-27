@@ -6,7 +6,7 @@ After=network.target
 User=root
 WorkingDirectory=/root/fast-knowledge-tlbb
 Environment="PATH=/root/miniconda3/envs/fast-knowledge/bin"
-ExecStart=/root/miniconda3/envs/fast-knowledge/bin/python main.py run
+ExecStart=/root/miniconda3/envs/fast-knowledge/bin/python manage.py run-server
 Restart=on-failure
 PIDFile=/var/run/fast-knowledge.pid
 

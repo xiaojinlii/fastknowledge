@@ -10,8 +10,8 @@ from starlette.responses import JSONResponse
 
 from application.settings import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE, LLM_MODELS, SEARCH_SERVER_URL, \
     MAX_TOKENS
-from core.logger import logger
-from utils.response import ErrorResponse
+from xiaoapi.core import logger
+from xiaoapi.response import ErrorResponse
 from .history import History
 from .utils import search_docs, get_prompt_template, get_ChatOpenAI
 
