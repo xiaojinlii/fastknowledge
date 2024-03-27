@@ -6,20 +6,18 @@ redis连接
 Github: https://github.com/aio-libs/aioredis-py
 
 需要安装：
-pip install aioredis==2.0.1
 pip install redis==5.0.1
 """
 
 from fastapi import FastAPI, Request
 from redis.asyncio import Redis
 
-from application.configs import REDISVALUE, AIHOST, MAX_RPS_VALUE
+from application.settings import REDISVALUE, AIHOST, MAX_RPS_VALUE
 from application.settings import REDIS_DB_URL, REDIS_DB_ENABLE
 from redis import asyncio as aioredis
 from redis.exceptions import AuthenticationError, TimeoutError, RedisError
 
-from core.exception import CustomException
-from core.logger import logger
+from xiaoapi.core import CustomException, logger
 
 
 async def connect_redis(app: FastAPI, status: bool):

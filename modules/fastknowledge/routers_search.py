@@ -2,7 +2,7 @@ import httpx
 from fastapi import APIRouter, Depends, Body, Request
 from starlette.responses import JSONResponse
 
-from application.configs import SCORE_THRESHOLD, SEARCH_SERVER_URL
+from application.settings import SCORE_THRESHOLD, SEARCH_SERVER_URL
 
 
 router = APIRouter()
