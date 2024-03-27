@@ -147,7 +147,7 @@ REDIS_DB_ENABLE = True
 # 格式："redis://:密码@地址:端口/数据库名称"
 REDIS_DB_URL = "redis://:123456@172.17.59.40:57999/0"
 # 和游戏服通讯用的字段
-REDISVALUE = "serverliststatus11"
+REDISVALUE = "serverliststatus"
 # 本机ip
 AIHOST = "172.17.59.7:7861"
 # 本机的最大并发
